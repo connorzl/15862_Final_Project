@@ -15,34 +15,50 @@ layer1 = layers.layer1;
 layer2 = layers.layer2;
 layer3 = layers.layer3;
 
-%% find strong strokes
+% scale image to canvas size and convert to grayscale
 img_large = imresize(img, canvasScale);
 img_grayscale = rgb2gray(img_large);
 
-width = wb;
+% find strong strokes for base layer
+thresh = 0.1;
+[canvas, baseLayer] = findStrongStrokes(baseLayer, numRows, numCols, wb,...
+    thresh, img_grayscale);
+%figure;
+%imshow(canvas);
+
+% find strong strokes for other layers
+[canvas, layer1] = findStrongStrokes(layer1, numRows, numCols, wb/2,...
+    thresh, img_grayscale);
+figure;
+imshow(canvas);
+
+%% find strong strokes
+function [canvas, layer] = findStrongStrokes(layer, numRows, numCols, width,...
+    thresh, img_grayscale)
+
 kernelSize = [width width];
 kernel = fspecial('gaussian',kernelSize);
 img_blur = imfilter(img_grayscale,kernel,'same');
-
 [Gx,Gy] = imgradientxy(img_blur,'sobel');
-thresh = 1;
 
 numStrong = 0;
-for i = 1:size(baseLayer)
-    S = baseLayer(i);
-    v = [Gx(S.c), Gy(S.r)];
+for i = 1:size(layer)
+    S = layer(i);
+    v = [Gx(S.r,S.c), Gy(S.r,S.c)];
     if norm(v) >= thresh
         numStrong = numStrong + 1;
         S.strong = 1;
-        baseLayer(i) = S;
+        layer(i) = S;
     end
 end
 
-baseCanvas = zeros(numRows, numCols);
-for i = 1:size(baseLayer)
-    S = baseLayer(i);
+canvas = zeros(numRows, numCols);
+for i = 1:size(layer)
+    S = layer(i);
     if S.strong
-        baseCanvas(S.r,S.c) = 1;
+        canvas(S.r,S.c) = 1;
     end
 end
-imshow(baseCanvas);
+
+disp(numStrong);
+end
