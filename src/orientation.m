@@ -45,14 +45,23 @@ imshow(canvas);
 %% compute radial basis function
 P = [];
 T = [];
-[P,T] = getStrongStrokes(P,T,baseLayer,Gx0,Gy0);
-[P,T] = getStrongStrokes(P,T,layer1,Gx1,Gy1);
-[P,T] = getStrongStrokes(P,T,layer2,Gx2,Gy2);
-[P,T] = getStrongStrokes(P,T,layer3,Gx3,Gy3);
-eg = 0.02; % sum-squared error goal
-sc = 1;    % spread constant
-net = newrb(P,T,eg,sc);
+[P,T] = getStrongStrokes(P,T,baseLayer,Gx0);
+[P,T] = getStrongStrokes(P,T,layer1,Gx1);
+[P,T] = getStrongStrokes(P,T,layer2,Gx2);
+[P,T] = getStrongStrokes(P,T,layer3,Gx3);
 
+eg = 0;      % sum-squared error goal
+sc = 1;    % spread constant
+net_x = newrb(P,T,eg,sc);
+
+P = [];
+T = [];
+[P,T] = getStrongStrokes(P,T,baseLayer,Gy0);
+[P,T] = getStrongStrokes(P,T,layer1,Gy1);
+[P,T] = getStrongStrokes(P,T,layer2,Gy2);
+[P,T] = getStrongStrokes(P,T,layer3,Gy3);
+
+net_y = newrb(P,T,eg,sc);
 %%
 input = zeros(2,numRows*numCols);
 for i = 1:numRows
@@ -62,7 +71,8 @@ for i = 1:numRows
     end
 end
 disp('done building input');
-res = net(input);
+res_x = net_x(input);
+res_y = net_y(input);
 disp('done evaluating');
 
 xs = zeros(numRows,numCols);
@@ -70,18 +80,19 @@ ys = zeros(numRows,numCols);
 for i = 1:numRows*numCols
     r = ceil(i / numCols);
     c = mod(i-1, numCols) + 1;
-    xs(r,c) = res(1,i);
-    ys(r,c) = res(2,i);
+    xs(r,c) = res_x(i);
+    ys(r,c) = res_y(i);
 end
 
 %% visualize
 figure;
-n = 1;
+n = 3;
 quiver(xs(1:n:end,1:n:end), ys(1:n:end,1:n:end), '.');
 axis image;
 axis ij;
 
 %% extract gradients for strong strokes
+%{
 function [P,T] = getStrongStrokes(P,T,layer,Gx,Gy)
 for i = 1:size(layer)
     S = layer(i);
@@ -89,11 +100,21 @@ for i = 1:size(layer)
         coords = [S.r; S.c];
         P = [P coords];
         vals = [Gx(S.r,S.c); Gy(S.r,S.c)];
-        T = [T vals];
+        T = [T Gx(S.r,S.c)];
     end
 end
 end
-
+%}
+function [P,T] = getStrongStrokes(P,T,layer,G)
+for i = 1:size(layer)
+    S = layer(i);
+    if S.strong
+        coords = [S.r; S.c];
+        P = [P coords];
+        T = [T G(S.r,S.c)];
+    end
+end
+end
 %% find strong strokes
 function [canvas, layer, Gx, Gy] = findStrongStrokes(layer, numRows, numCols, width,...
     thresh, img_grayscale)
