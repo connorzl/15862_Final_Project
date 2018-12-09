@@ -1,3 +1,5 @@
+close all
+
 %% read in image
 img = im2double(imread('../data/peach.png'));
 [imh, imw, ~] = size(img);
@@ -29,39 +31,51 @@ imshow(canvas);
 % find strong strokes for other layers
 [canvas, layer1, Gx1, Gy1] = findStrongStrokes(layer1, numRows, numCols, wb/2,...
     thresh, img_grayscale);
-figure;
+hold on
 imshow(canvas);
 
 [canvas, layer2, Gx2, Gy2] = findStrongStrokes(layer2, numRows, numCols, wb/4,...
     thresh, img_grayscale);
-figure;
 imshow(canvas);
 
 [canvas, layer3, Gx3, Gy3] = findStrongStrokes(layer3, numRows, numCols, round(wb/8),...
     thresh, img_grayscale);
-figure;
 imshow(canvas);
 
 %% compute radial basis function
 P = [];
-T = [];
-[P,T] = getStrongStrokes(P,T,baseLayer,Gx0);
-[P,T] = getStrongStrokes(P,T,layer1,Gx1);
-[P,T] = getStrongStrokes(P,T,layer2,Gx2);
-[P,T] = getStrongStrokes(P,T,layer3,Gx3);
+Tx = [];
+[P,Tx] = getStrongStrokes(P,Tx,baseLayer,Gx0,numRows,numCols);
+[P,Tx] = getStrongStrokes(P,Tx,layer1,Gx1,numRows,numCols);
+[P,Tx] = getStrongStrokes(P,Tx,layer2,Gx2,numRows,numCols);
+[P,Tx] = getStrongStrokes(P,Tx,layer3,Gx3,numRows,numCols);
 
-eg = 0;      % sum-squared error goal
-sc = 1;    % spread constant
-net_x = newrb(P,T,eg,sc);
+eg = 0.001;    % sum-squared error goal
+sc = 20;    % spread constant
+net_x = newrb(P,Tx,eg,sc);
 
 P = [];
-T = [];
-[P,T] = getStrongStrokes(P,T,baseLayer,Gy0);
-[P,T] = getStrongStrokes(P,T,layer1,Gy1);
-[P,T] = getStrongStrokes(P,T,layer2,Gy2);
-[P,T] = getStrongStrokes(P,T,layer3,Gy3);
+Ty = [];
+[P,Ty] = getStrongStrokes(P,Ty,baseLayer,Gy0,numRows,numCols);
+[P,Ty] = getStrongStrokes(P,Ty,layer1,Gy1,numRows,numCols);
+[P,Ty] = getStrongStrokes(P,Ty,layer2,Gy2,numRows,numCols);
+[P,Ty] = getStrongStrokes(P,Ty,layer3,Gy3,numRows,numCols);
 
-net_y = newrb(P,T,eg,sc);
+net_y = newrb(P,Ty,eg,sc);
+
+%% visualize strong gradients
+n = 1;
+xs = zeros(numRows,numCols);
+ys = zeros(numRows,numCols);
+for i = 1:size(Tx,2)
+    y = P(1,i);
+    x = P(2,i);
+    xs(y,x) = Tx(i);
+    ys(y,x) = Ty(i);
+end
+quiver(xs(1:n:end,1:n:end), ys(1:n:end,1:n:end),100, '.');
+axis image;
+axis ij;
 %%
 input = zeros(2,numRows*numCols);
 for i = 1:numRows
@@ -87,31 +101,22 @@ end
 %% visualize
 figure;
 n = 3;
-quiver(xs(1:n:end,1:n:end), ys(1:n:end,1:n:end), '.');
+
+quiver(xs(1:n:end,1:n:end), ys(1:n:end,1:n:end),10, '.');
 axis image;
 axis ij;
 
 %% extract gradients for strong strokes
-%{
-function [P,T] = getStrongStrokes(P,T,layer,Gx,Gy)
+
+function [P,T] = getStrongStrokes(P,T,layer,G,numRows,numCols)
 for i = 1:size(layer)
     S = layer(i);
     if S.strong
         coords = [S.r; S.c];
-        P = [P coords];
-        vals = [Gx(S.r,S.c); Gy(S.r,S.c)];
-        T = [T Gx(S.r,S.c)];
-    end
-end
-end
-%}
-function [P,T] = getStrongStrokes(P,T,layer,G)
-for i = 1:size(layer)
-    S = layer(i);
-    if S.strong
-        coords = [S.r; S.c];
-        P = [P coords];
-        T = [T G(S.r,S.c)];
+        if S.r > 5 && S.r < numRows-10 && S.c > 5 && S.c < numCols-5
+            P = [P coords];
+            T = [T G(S.r,S.c)];
+        end
     end
 end
 end
