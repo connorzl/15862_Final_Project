@@ -15,7 +15,7 @@ wb = 36;
 % default brush stroke
 N = ceil(numCols / wr * numRows / wr);
 S = struct('r',0,'c',0,'ang',0,'w',0,'l1',0,'l2',0,...
-    'color',[0,0,0],'opacity',0,'strong',0);
+    'color',[0,0,0],'opacity',0,'strong',0,'stroke_pixels',[]);
 
 %% compute base layer
 baseLayer = repmat(S, N, 1);

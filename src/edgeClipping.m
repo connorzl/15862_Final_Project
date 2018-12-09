@@ -52,21 +52,74 @@ imshow(edge_img_2);
 figure;
 imshow(edge_img_3);
 %}
-
+mask = zeros(numRows, numCols);
+inc = 1;
 for s = 1:size(layer0,1)
+    if mod(inc,50) == 0
+        disp(inc);
+    end
+    inc = inc + 1;
     curr_stroke = layer0(s);
-    r = curr_stroke.r;
-    c = curr_stroke.c;
     ang = curr_stroke.ang;
     
-    dX = 0;
-    dY = 0;
-    while true
-        % grow stroke both directions
-        
-        % for loop in a radius along stroke width to check if hit edge
-        
-        % set l accordingly
-        
+    dX = 1;
+    dY = tan(ang);
+    
+    [mask,stroke_length1,mask_pixels1] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img_0,curr_stroke,mask);
+    
+    
+    dX = -1;
+    dY = -tan(ang);
+    
+    [mask,stroke_length2,mask_pixels2] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img_0,curr_stroke,mask);
+    curr_stroke.stroke_pixels = [mask_pixels1; mask_pixels2];
+    layer0(s) = curr_stroke;
+end
+
+function [mask,stroke_length,mask_pixels] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img,curr_stroke,mask)
+no_edge_hit = true;
+stroke_length = 0;
+y = curr_stroke.r;
+x = curr_stroke.c;
+local_mask = zeros(numRows,numCols);
+while no_edge_hit
+    circle = [];
+    for new_y=round(y-wb/2):round(y+wb/2)
+        for new_x=round(x-wb/2):round(x+wb/2)
+            if new_y < 1 || new_y > numRows || new_x < 1 || new_x > numCols
+                continue
+            end
+            if ~no_edge_hit || edge_img(new_y, new_x)
+                no_edge_hit = false;
+                break
+            end
+            if sqrt((new_x-x)^2 + (new_y-y)^2) <= wb/2
+                circle = [circle; new_y new_x];
+            end
+        end
     end
+    
+    if no_edge_hit
+        stroke_length = sqrt((x-curr_stroke.c)^2 + (y-curr_stroke.r)^2);
+        for i=1:size(circle,1)
+            local_mask(circle(i,1), circle(i,2)) = 1;
+            mask(circle(i,1), circle(i,2)) = 1;
+        end
+    end
+    
+    x = x + dX;
+    y = y + dY;
+    if (x < 1 || x > numCols || y < 1 || y > numRows)
+        break
+    end
+end
+
+mask_idxs = find(local_mask);
+mask_pixels = zeros(size(mask_idxs,1),2);
+for j=1:size(mask_idxs,1)
+    idx = mask_idxs(j);
+    idx_c = ceil(idx / numRows);
+    idx_r = mod(idx-1, numRows) + 1;
+    mask_pixels(j,:) = [idx_r,idx_c];
+end
 end
