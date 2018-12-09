@@ -52,3 +52,21 @@ imshow(edge_img_2);
 figure;
 imshow(edge_img_3);
 %}
+
+for s = 1:size(layer0,1)
+    curr_stroke = layer0(s);
+    r = curr_stroke.r;
+    c = curr_stroke.c;
+    ang = curr_stroke.ang;
+    
+    dX = 0;
+    dY = 0;
+    while true
+        % grow stroke both directions
+        
+        % for loop in a radius along stroke width to check if hit edge
+        
+        % set l accordingly
+        
+    end
+end
