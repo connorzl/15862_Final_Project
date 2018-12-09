@@ -1,4 +1,5 @@
 close all
+clear all
 
 %% read in image
 img = im2double(imread('../data/peach.png'));
@@ -44,78 +45,53 @@ imshow(canvas);
 
 %% compute radial basis function
 P = [];
-Tx = [];
-[P,Tx] = getStrongStrokes(P,Tx,baseLayer,Gx0,numRows,numCols);
-[P,Tx] = getStrongStrokes(P,Tx,layer1,Gx1,numRows,numCols);
-[P,Tx] = getStrongStrokes(P,Tx,layer2,Gx2,numRows,numCols);
-[P,Tx] = getStrongStrokes(P,Tx,layer3,Gx3,numRows,numCols);
+P_g = [];
+[P,P_g] = getStrongStrokes(P,P_g,baseLayer,Gx0,Gy0,numRows,numCols);
+[P,P_g] = getStrongStrokes(P,P_g,layer1,Gx1,Gy1,numRows,numCols);
+[P,P_g] = getStrongStrokes(P,P_g,layer2,Gx2,Gy2,numRows,numCols);
+[P,P_g] = getStrongStrokes(P,P_g,layer3,Gx3,Gy3,numRows,numCols);
 
-eg = 0.001;    % sum-squared error goal
-sc = 20;    % spread constant
-net_x = newrb(P,Tx,eg,sc);
+% P_y = [];
+% P_gy = [];
+% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,baseLayer,Gy0,numRows,numCols);
+% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,layer1,Gy1,numRows,numCols);
+% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,layer2,Gy2,numRows,numCols);
+% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,layer3,Gy3,numRows,numCols);
 
-P = [];
-Ty = [];
-[P,Ty] = getStrongStrokes(P,Ty,baseLayer,Gy0,numRows,numCols);
-[P,Ty] = getStrongStrokes(P,Ty,layer1,Gy1,numRows,numCols);
-[P,Ty] = getStrongStrokes(P,Ty,layer2,Gy2,numRows,numCols);
-[P,Ty] = getStrongStrokes(P,Ty,layer3,Gy3,numRows,numCols);
+[layer, temp_x, temp_y] = find_orientation(numRows,numCols,layer3,P,P_g);
 
-net_y = newrb(P,Ty,eg,sc);
-
-%% visualize strong gradients
+%% visualize strong and all gradients
 n = 1;
 xs = zeros(numRows,numCols);
 ys = zeros(numRows,numCols);
-for i = 1:size(Tx,2)
-    y = P(1,i);
-    x = P(2,i);
-    xs(y,x) = Tx(i);
-    ys(y,x) = Ty(i);
+for i = 1:size(P_g,1)
+    r = P(i,1);
+    c = P(i,2);
+    xs(r,c) = P_g(i,1);
+    ys(r,c) = P_g(i,2);
 end
+figure;
 quiver(xs(1:n:end,1:n:end), ys(1:n:end,1:n:end),100, '.');
 axis image;
 axis ij;
-%%
-input = zeros(2,numRows*numCols);
-for i = 1:numRows
-    for j = 1:numCols
-        coord = [i; j];
-        input(:,(i-1)*numCols + j) = coord;
-    end
-end
-disp('done building input');
-res_x = net_x(input);
-res_y = net_y(input);
-disp('done evaluating');
+hold on;
 
-xs = zeros(numRows,numCols);
-ys = zeros(numRows,numCols);
-for i = 1:numRows*numCols
-    r = ceil(i / numCols);
-    c = mod(i-1, numCols) + 1;
-    xs(r,c) = res_x(i);
-    ys(r,c) = res_y(i);
-end
+n = 1;
 
-%% visualize
-figure;
-n = 3;
-
-quiver(xs(1:n:end,1:n:end), ys(1:n:end,1:n:end),10, '.');
+quiver(temp_x(1:n:end,1:n:end), temp_y(1:n:end,1:n:end),10, '.');
 axis image;
 axis ij;
 
 %% extract gradients for strong strokes
 
-function [P,T] = getStrongStrokes(P,T,layer,G,numRows,numCols)
+function [P,T] = getStrongStrokes(P,T,layer,Gx,Gy,numRows,numCols)
 for i = 1:size(layer)
     S = layer(i);
     if S.strong
-        coords = [S.r; S.c];
+        coords = [S.r S.c];
         if S.r > 5 && S.r < numRows-10 && S.c > 5 && S.c < numCols-5
-            P = [P coords];
-            T = [T G(S.r,S.c)];
+            P = [P; coords];
+            T = [T; Gx(S.r,S.c) Gy(S.r,S.c)];
         end
     end
 end
@@ -126,7 +102,7 @@ function [canvas, layer, Gx, Gy] = findStrongStrokes(layer, numRows, numCols, wi
 
 kernelSize = [width width];
 kernel = fspecial('gaussian',kernelSize);
-img_blur = imfilter(img_grayscale,kernel,'same');
+img_blur = imfilter(img_grayscale,kernel,'replicate','same');
 [Gx,Gy] = imgradientxy(img_blur,'sobel');
 
 numStrong = 0;
@@ -149,4 +125,46 @@ for i = 1:size(layer)
 end
 
 disp(numStrong);
+end
+
+function [layer, temp_x, temp_y] = find_orientation(numRows,numCols,layer,P,P_g)
+temp_x = zeros(numRows, numCols);
+temp_y = zeros(numRows, numCols);
+% sigma = 50;
+nearest_num = 20; % TODO try diff numbers
+for s=1:size(layer,1)
+    curr_stroke = layer(s);
+    r = curr_stroke.r;
+    c = curr_stroke.c;
+    inv_dists = zeros(size(P,1),2);
+    for i=1:size(P,1)
+        P_r = P(i,1);
+        P_c = P(i,2);
+            dist = sqrt((r-P_r)^2 + (c-P_c)^2);
+    %         if dist < 200
+    %             inv_dists(i,1) = 1/dist;
+    %             inv_dists(i,2) = P_r;
+    %             inv_dists(i,3) = P_c;
+    %         end
+            inv_dists(i,:) = [1/dist, i];
+    %         inv_dists(i,:) = [1/(sigma * 2 * pi) * exp(-dist^2 / (2*sigma^2)); P_r; P_c];
+    %         inv_dists(i) = 1/(sigma * 2 * pi) * exp(-dist^2 / (2*sigma^2));
+       
+    end
+    sorted_dists = sortrows(inv_dists,1,'descend');
+    sorted_dists = sorted_dists(1:nearest_num,:);
+    total_dists = sum(sorted_dists(:,1));
+    x_grad = 0;
+    y_grad = 0;
+    for i=1:size(sorted_dists,1)
+        weight = sorted_dists(i,1) / total_dists;
+        x_grad = x_grad + weight * P_g(sorted_dists(i,2),1);
+        y_grad = y_grad + weight * P_g(sorted_dists(i,2),2);
+    end
+    temp_x(r,c) = x_grad;
+    temp_y(r,c) = y_grad;
+    curr_stroke.ang = mod(atan2(y_grad,x_grad) + pi/2, 2*pi);
+    layer(s) = curr_stroke;
+end
+disp('done');
 end
