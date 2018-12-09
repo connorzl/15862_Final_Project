@@ -51,14 +51,11 @@ P_g = [];
 [P,P_g] = getStrongStrokes(P,P_g,layer2,Gx2,Gy2,numRows,numCols);
 [P,P_g] = getStrongStrokes(P,P_g,layer3,Gx3,Gy3,numRows,numCols);
 
-% P_y = [];
-% P_gy = [];
-% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,baseLayer,Gy0,numRows,numCols);
-% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,layer1,Gy1,numRows,numCols);
-% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,layer2,Gy2,numRows,numCols);
-% [P_y,P_gy] = getStrongStrokes(P_y,P_gy,layer3,Gy3,numRows,numCols);
-
-[layer, temp_x, temp_y] = find_orientation(numRows,numCols,layer3,P,P_g);
+[layer0, temp_x, temp_y] = find_orientation(numRows,numCols,baseLayer,P,P_g);
+[layer1, temp_x, temp_y] = find_orientation(numRows,numCols,layer1,P,P_g);
+[layer2, temp_x, temp_y] = find_orientation(numRows,numCols,layer2,P,P_g);
+[layer3, temp_x, temp_y] = find_orientation(numRows,numCols,layer3,P,P_g);
+save('orientation_layers.mat','layer0','layer1','layer2','layer3');
 
 %% visualize strong and all gradients
 n = 1;
@@ -112,6 +109,7 @@ for i = 1:size(layer)
     if norm(v) >= thresh
         numStrong = numStrong + 1;
         S.strong = 1;
+        S.ang = mod(atan2(v(2),v(1)) + pi/2, 2*pi);
         layer(i) = S;
     end
 end
@@ -134,6 +132,11 @@ temp_y = zeros(numRows, numCols);
 nearest_num = 20; % TODO try diff numbers
 for s=1:size(layer,1)
     curr_stroke = layer(s);
+    
+    if curr_stroke.strong
+        continue
+    end
+    
     r = curr_stroke.r;
     c = curr_stroke.c;
     inv_dists = zeros(size(P,1),2);
@@ -141,19 +144,12 @@ for s=1:size(layer,1)
         P_r = P(i,1);
         P_c = P(i,2);
             dist = sqrt((r-P_r)^2 + (c-P_c)^2);
-    %         if dist < 200
-    %             inv_dists(i,1) = 1/dist;
-    %             inv_dists(i,2) = P_r;
-    %             inv_dists(i,3) = P_c;
-    %         end
             inv_dists(i,:) = [1/dist, i];
-    %         inv_dists(i,:) = [1/(sigma * 2 * pi) * exp(-dist^2 / (2*sigma^2)); P_r; P_c];
-    %         inv_dists(i) = 1/(sigma * 2 * pi) * exp(-dist^2 / (2*sigma^2));
-       
     end
     sorted_dists = sortrows(inv_dists,1,'descend');
     sorted_dists = sorted_dists(1:nearest_num,:);
     total_dists = sum(sorted_dists(:,1));
+
     x_grad = 0;
     y_grad = 0;
     for i=1:size(sorted_dists,1)
@@ -164,6 +160,9 @@ for s=1:size(layer,1)
     temp_x(r,c) = x_grad;
     temp_y(r,c) = y_grad;
     curr_stroke.ang = mod(atan2(y_grad,x_grad) + pi/2, 2*pi);
+    if isnan(curr_stroke.ang)
+        disp(sorted_dists);
+    end
     layer(s) = curr_stroke;
 end
 disp('done');
