@@ -52,28 +52,43 @@ imshow(edge_img_2);
 figure;
 imshow(edge_img_3);
 %}
+wb = 36;
+% [layer0,mask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb);
+% [layer1,mask1] = add_strokes_to_layer(numRows,numCols,layer1,edge_img_1,wb/2);
+% [layer2,mask2] = add_strokes_to_layer(numRows,numCols,layer2,edge_img_2,wb/3);
+[layer3,mask3] = add_strokes_to_layer(numRows,numCols,layer3,edge_img_3,wb/6);
+
+function [layer, mask] = add_strokes_to_layer(numRows,numCols,layer,edge_img,wb)
 mask = zeros(numRows, numCols);
-inc = 1;
-for s = 1:size(layer0,1)
+inc = 0;
+for s = 1:size(layer,1)
     if mod(inc,50) == 0
         disp(inc);
     end
     inc = inc + 1;
-    curr_stroke = layer0(s);
+    curr_stroke = layer(s);
     ang = curr_stroke.ang;
     
     dX = 1;
     dY = tan(ang);
+    if dY > tan(pi/2-0.01)
+        dX = 0;
+        dY = 1;
+    end
     
-    [mask,stroke_length1,mask_pixels1] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img_0,curr_stroke,mask);
+    [mask,stroke_length1,mask_pixels1] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img,curr_stroke,mask);
+    curr_stroke.l1 = stroke_length1;
     
+   
+    dX = -dX;
+    dY = -dY;
+    [mask,stroke_length2,mask_pixels2] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img,curr_stroke,mask);
+    curr_stroke.l2 = stroke_length2;
     
-    dX = -1;
-    dY = -tan(ang);
-    
-    [mask,stroke_length2,mask_pixels2] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img_0,curr_stroke,mask);
     curr_stroke.stroke_pixels = [mask_pixels1; mask_pixels2];
-    layer0(s) = curr_stroke;
+    
+    layer(s) = curr_stroke;
+end
 end
 
 function [mask,stroke_length,mask_pixels] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img,curr_stroke,mask)
