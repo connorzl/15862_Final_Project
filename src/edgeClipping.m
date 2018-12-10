@@ -53,10 +53,12 @@ figure;
 imshow(edge_img_3);
 %}
 wb = 36;
-% [layer0,mask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb);
-% [layer1,mask1] = add_strokes_to_layer(numRows,numCols,layer1,edge_img_1,wb/2);
-% [layer2,mask2] = add_strokes_to_layer(numRows,numCols,layer2,edge_img_2,wb/3);
+[layer0,mask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb);
+[layer1,mask1] = add_strokes_to_layer(numRows,numCols,layer1,edge_img_1,wb/2);
+[layer2,mask2] = add_strokes_to_layer(numRows,numCols,layer2,edge_img_2,wb/3);
 [layer3,mask3] = add_strokes_to_layer(numRows,numCols,layer3,edge_img_3,wb/6);
+
+save('edgeclip_layers.mat','layer0','layer1','layer2','layer3');
 
 function [layer, mask] = add_strokes_to_layer(numRows,numCols,layer,edge_img,wb)
 mask = zeros(numRows, numCols);
