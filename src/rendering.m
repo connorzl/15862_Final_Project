@@ -15,7 +15,7 @@ alphas = text_img(49:146,305:603);
 alphas = alphas(18:79,13:285);
 
 for s=1:size(layer0,1)
-    stroke = layer0(s)
+    stroke = layer0(s);
     
     if stroke.l1 + stroke.l2 == 0
         continue
@@ -29,8 +29,13 @@ for s=1:size(layer0,1)
     col = round(stroke.l2 / (stroke.l1 + stroke.l2) * size(stroke_texture,2));
     centered_texture = center_im(stroke_texture,row,col);
     centered_alpha = center_im(stroke_alpha,row,col);
-    angle_texture = imrotate(centered_texture, stroke.ang);
-    angle_alpha = imrotate(centered_alpha, stroke.ang);
+    angle = stroke.ang * 360 / (2 * pi);
+    angle_texture = imrotate(centered_texture, angle);
+    angle_alpha = imrotate(centered_alpha, angle);
+    figure;
+    subplot(1,2,1), imshow(angle_texture)
+    subplot(1,2,2), imshow(angle_alpha)
+    pause
 end
 
 % scale texture to have length length1 + length2
@@ -69,13 +74,11 @@ else
     centered_im = padarray(centered_im,[0;right_pad],0,'post');
 end
 
-figure;
-imshow(centered_im);
-hold on;
-plot(col+left_pad,row+top_pad,'b*');
-pause;
-
-    
+% figure;
+% imshow(centered_im);
+% hold on;
+% plot(col+left_pad,row+top_pad,'b*');
+% pause;
 end
 
 
