@@ -1,5 +1,9 @@
+%% 
+close all
+clear all
+
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img = im2double(imread('../data/logo.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -25,13 +29,23 @@ textures = textures(18:79,13:285);
 alphas = text_img(49:146,305:603);
 alphas = alphas(18:79,13:285);
 
-for s=1:size(layer0,1)
+[canvas0, canvas_alphas0] = renderLayer(layer0,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols);
+disp("done nom");
+[canvas1, canvas_alphas1] = renderLayer(layer1,wb/2,textures,alphas,canvas0,canvas_alphas0,numRows,numCols);
+disp("done nom");
+[canvas2, canvas_alphas2] = renderLayer(layer2,wb/3,textures,alphas,canvas1,canvas_alphas1,numRows,numCols);
+disp("done nom");
+[canvas3, canvas_alphas3] = renderLayer(layer3,wb/6,textures,alphas,canvas2,canvas_alphas2,numRows,numCols);
+disp("done nom");
+
+function [canvas,canvas_alphas] = ...
+    renderLayer(layer,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols)
+for s=1:size(layer,1)
     if mod(s,50) == 0
        disp("nom tubba"); 
     end
     
-    stroke = layer0(s);
-    
+    stroke = layer(s);
     if stroke.l1 + stroke.l2 == 0
         continue
     end
@@ -50,8 +64,8 @@ for s=1:size(layer0,1)
     end
     
     % pad texture and alpha
-    centered_texture = center_im(stroke_texture,row,col);
-    centered_alpha = center_im(stroke_alpha,row,col);
+    centered_texture = center_im(stroke_texture,col);
+    centered_alpha = center_im(stroke_alpha,col);
     
     % rotate texture and alpha
     angle = stroke.ang * 360 / (2 * pi);
@@ -71,40 +85,21 @@ for s=1:size(layer0,1)
             if angle_alpha(i-row_start+1,j-col_start+1) > 0
                texture_pixel = angle_texture(i-row_start+1,j-col_start+1,:);
                texture_alpha = angle_alpha(i-row_start+1,j-col_start+1);
-               %{
+               
                A_prime = squeeze(canvas(i,j,:));
                B_prime = squeeze(texture_alpha * texture_pixel);
                canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
                canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
-               %}
-               canvas(i,j,:) = canvas(i,j,:) * (1-texture_alpha) + texture_pixel * texture_alpha;
+          
+               % compositing something
+%                canvas(i,j,:) = canvas(i,j,:) * (1-texture_alpha) + texture_pixel * texture_alpha;
             end
         end
     end
-
-   %{ 
-   figure;
-   imshow(canvas);
-   pause
-   %}
-    
-    %{
-    figure;
-    subplot(1,2,1), imshow(angle_texture)
-    subplot(1,2,2), imshow(angle_alpha)
-    pause
-    %}
+end
 end
 
-% scale texture to have length length1 + length2
-
-% find texture origin based on ratio of length1 and length2
-
-% rotate texture by angle
-
-% translate texture to the brush stroke center and alpha composite
-
-function centered_im = center_im(im,row,col)
+function centered_im = center_im(im,col)
 [imh,imw,~] = size(im);
 centered_im = im;
 left_pad = 0;
@@ -143,7 +138,6 @@ end
 % plot(col+left_pad,row+top_pad,'b*');
 % pause;
 end
-
 
 function color_texture = get_color_texture(textures, color)
 color_texture = zeros(size(textures,1),size(textures,2),3);

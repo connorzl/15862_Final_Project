@@ -1,5 +1,5 @@
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img = im2double(imread('../data/logo.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;

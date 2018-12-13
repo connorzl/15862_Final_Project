@@ -2,7 +2,7 @@ close all
 clear all
 
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img = im2double(imread('../data/logo.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -23,6 +23,7 @@ img_large = imresize(img, canvasScale);
 img_grayscale = rgb2gray(img_large);
 thresh = 0.15;
 
+%%
 % find strong strokes for base layer
 [canvas, baseLayer, Gx0, Gy0] = findStrongStrokes(baseLayer, numRows, numCols, wb,...
     thresh, img_grayscale);
@@ -80,7 +81,6 @@ axis image;
 axis ij;
 
 %% extract gradients for strong strokes
-
 function [P,T] = getStrongStrokes(P,T,layer,Gx,Gy,numRows,numCols)
 for i = 1:size(layer)
     S = layer(i);

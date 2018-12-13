@@ -2,7 +2,7 @@ close all
 clear all
 
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img = im2double(imread('../data/logo.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -53,12 +53,12 @@ figure;
 imshow(edge_img_3);
 %}
 wb = 36;
-%[layer0,mask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb);
+[layer0,mask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb);
 [layer1,mask1] = add_strokes_to_layer(numRows,numCols,layer1,edge_img_1,wb/2);
-%[layer2,mask2] = add_strokes_to_layer(numRows,numCols,layer2,edge_img_2,wb/3);
-%[layer3,mask3] = add_strokes_to_layer(numRows,numCols,layer3,edge_img_3,wb/6);
+[layer2,mask2] = add_strokes_to_layer(numRows,numCols,layer2,edge_img_2,wb/3);
+[layer3,mask3] = add_strokes_to_layer(numRows,numCols,layer3,edge_img_3,wb/6);
 
-%save('edgeclip_layers.mat','layer0','layer1','layer2','layer3');
+save('edgeclip_layers.mat','layer0','layer1','layer2','layer3');
 
 function [layer, mask] = add_strokes_to_layer(numRows,numCols,layer,edge_img,wb)
 mask = zeros(numRows, numCols);
@@ -81,16 +81,13 @@ for s = 1:size(layer,1)
     [mask,stroke_length1,mask_pixels1] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img,curr_stroke,mask);
     curr_stroke.l1 = stroke_length1;
     
-   
     dX = -dX;
     dY = -dY;
     [mask,stroke_length2,mask_pixels2] = grow_stroke(dX,dY,wb,numRows,numCols,edge_img,curr_stroke,mask);
     curr_stroke.l2 = stroke_length2;
     
     curr_stroke.stroke_pixels = [mask_pixels1; mask_pixels2];
-    
     layer(s) = curr_stroke;
-    break
 end
 end
 
