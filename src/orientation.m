@@ -2,7 +2,7 @@ close all
 clear all
 
 %% read in image
-img = im2double(imread('../data/tubba.png'));
+img = im2double(imread('../data/peach.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -93,14 +93,18 @@ for i = 1:size(layer)
     end
 end
 end
-%% find strong strokes
+%% find strong strokes based on gradient threshold
 function [canvas, layer, Gx, Gy] = findStrongStrokes(layer, numRows, numCols, width,...
     thresh, img_grayscale)
-
+%{
 kernelSize = [width width];
 kernel = fspecial('gaussian',kernelSize);
 img_blur = imfilter(img_grayscale,kernel,'replicate','same');
 [Gx,Gy] = imgradientxy(img_blur,'sobel');
+%}
+gradients = load('peach_gradients.mat');
+Gx = gradients.s_x;
+Gy = gradients.s_y;
 
 numStrong = 0;
 for i = 1:size(layer)
@@ -125,6 +129,7 @@ end
 disp(numStrong);
 end
 
+% estimate gradients based on nearest strong gradients
 function [layer, temp_x, temp_y] = find_orientation(numRows,numCols,layer,P,P_g)
 temp_x = zeros(numRows, numCols);
 temp_y = zeros(numRows, numCols);
