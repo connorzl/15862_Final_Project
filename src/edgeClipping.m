@@ -53,12 +53,12 @@ figure;
 imshow(edge_img_3);
 %}
 wb = 36;
-[layer0,mask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb);
+%[layer0,mask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb);
 [layer1,mask1] = add_strokes_to_layer(numRows,numCols,layer1,edge_img_1,wb/2);
-[layer2,mask2] = add_strokes_to_layer(numRows,numCols,layer2,edge_img_2,wb/3);
-[layer3,mask3] = add_strokes_to_layer(numRows,numCols,layer3,edge_img_3,wb/6);
+%[layer2,mask2] = add_strokes_to_layer(numRows,numCols,layer2,edge_img_2,wb/3);
+%[layer3,mask3] = add_strokes_to_layer(numRows,numCols,layer3,edge_img_3,wb/6);
 
-save('edgeclip_layers.mat','layer0','layer1','layer2','layer3');
+%save('edgeclip_layers.mat','layer0','layer1','layer2','layer3');
 
 function [layer, mask] = add_strokes_to_layer(numRows,numCols,layer,edge_img,wb)
 mask = zeros(numRows, numCols);
@@ -90,6 +90,7 @@ for s = 1:size(layer,1)
     curr_stroke.stroke_pixels = [mask_pixels1; mask_pixels2];
     
     layer(s) = curr_stroke;
+    break
 end
 end
 
@@ -102,11 +103,14 @@ local_mask = zeros(numRows,numCols);
 while no_edge_hit
     circle = [];
     for new_y=round(y-wb/2):round(y+wb/2)
+        if ~no_edge_hit
+            break
+        end
         for new_x=round(x-wb/2):round(x+wb/2)
             if new_y < 1 || new_y > numRows || new_x < 1 || new_x > numCols
                 continue
             end
-            if ~no_edge_hit || edge_img(new_y, new_x)
+            if edge_img(new_y, new_x)
                 no_edge_hit = false;
                 break
             end
