@@ -1,5 +1,5 @@
 %% read in image
-img = im2double(imread('../data/logo.png'));
+img = im2double(imread('../data/tubba.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -24,14 +24,14 @@ baseLayerMask = zeros(numRows, numCols);
 baseLayerMask(wr+1:numRows-wr-1, wr+1:numCols-wr-1) = 1;
 
 baseLayer = computeBrushStrokes(baseLayerMask,baseLayer,numRows,numCols,wr);
-visualizeLayer(baseLayer,numRows,numCols);
+visualizeLayer(baseLayer,numRows,numCols,baseLayerMask);
 
 %% initialize layer parameters
 img_large = imresize(img, canvasScale);
 img_grayscale = rgb2gray(img_large);
 sigma_1 = 0.3 * wb;
 sigma_2 = 0.2 * wb;
-sigma_3 = 0;
+sigma_3 = 0.15 * wb;
 
 %% initialize layer 1
 layer1 = repmat(S, N, 1);
@@ -39,7 +39,7 @@ img_1 = edge(img_grayscale,'Canny',[],sigma_1);
 layer1Mask = computeLayerMask(wr, find(img_1), numRows, numCols);
 
 layer1 = computeBrushStrokes(layer1Mask,layer1,numRows,numCols,wr);
-visualizeLayer(layer1,numRows,numCols);
+visualizeLayer(layer1,numRows,numCols,layer1Mask);
 
 %% initialize layer 2
 layer2 = repmat(S, N, 1);
@@ -47,15 +47,15 @@ img_2 = edge(img_grayscale,'Canny',[],sigma_2);
 layer2Mask = computeLayerMask(0.5*wr, find(img_2), numRows, numCols);
 
 layer2 = computeBrushStrokes(layer2Mask,layer2,numRows,numCols,wr);
-visualizeLayer(layer2,numRows,numCols);
+visualizeLayer(layer2,numRows,numCols,layer2Mask);
 
 %% initialize layer 3
 layer3 = repmat(S, N, 1);
-img_3 = edge(img_grayscale,'Canny',0.1);
+img_3 = edge(img_grayscale,'Canny',[],sigma_3);
 layer3Mask = computeLayerMask(0.25*wr, find(img_3), numRows, numCols);
 
 layer3 = computeBrushStrokes(layer3Mask,layer3,numRows,numCols,wr);
-visualizeLayer(layer3,numRows,numCols);
+visualizeLayer(layer3,numRows,numCols,layer3Mask);
 
 %{
 figure;
@@ -76,6 +76,7 @@ imshow(layer3Mask);
 
 %% save to file
 save('layers.mat','baseLayer','layer1','layer2','layer3');
+save('layer_masks.mat','baseLayerMask','layer1Mask','layer2Mask','layer3Mask');
 
 %% helper functions
 function layerMask = computeLayerMask(rad, inds, numRows, numCols)
@@ -133,7 +134,7 @@ strokes = strokes(1:numStrokes);
 end
 
 % visualize results
-function [] = visualizeLayer(layer,numRows,numCols)
+function [] = visualizeLayer(layer,numRows,numCols,layerMask)
 baseCanvas = zeros(numRows, numCols);
 for i=1:size(layer)
     S = layer(i);
@@ -141,4 +142,6 @@ for i=1:size(layer)
 end
 figure;
 imshow(baseCanvas);
+figure;
+imshow(layerMask);
 end

@@ -3,7 +3,7 @@ close all
 clear all
 
 %% read in image
-img = im2double(imread('../data/logo.png'));
+img = im2double(imread('../data/tubba.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -85,14 +85,14 @@ for s=1:size(layer,1)
             if angle_alpha(i-row_start+1,j-col_start+1) > 0
                texture_pixel = angle_texture(i-row_start+1,j-col_start+1,:);
                texture_alpha = angle_alpha(i-row_start+1,j-col_start+1);
-               
-               A_prime = squeeze(canvas(i,j,:));
-               B_prime = squeeze(texture_alpha * texture_pixel);
-               canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
-               canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
+     
+                A_prime = squeeze(canvas(i,j,:));
+                B_prime = squeeze(texture_alpha * texture_pixel);
+                canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
+                canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
           
                % compositing something
-%                canvas(i,j,:) = canvas(i,j,:) * (1-texture_alpha) + texture_pixel * texture_alpha;
+               %canvas(i,j,:) = canvas(i,j,:) * (1-texture_alpha) + texture_pixel * texture_alpha;
             end
         end
     end

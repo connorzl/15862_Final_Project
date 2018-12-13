@@ -2,7 +2,7 @@ close all
 clear all
 
 %% read in image
-img = im2double(imread('../data/logo.png'));
+img = im2double(imread('../data/tubba.png'));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
