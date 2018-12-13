@@ -7,6 +7,7 @@ numRows = imh * canvasScale;
 numCols = imw * canvasScale;
 
 canvas = ones(numRows,numCols,3);
+canvas_alphas = zeros(numRows,numCols);
 
 layers = load('color_layers.mat');
 layer0 = layers.layer0;
@@ -14,7 +15,7 @@ layer1 = layers.layer1;
 layer2 = layers.layer2;
 layer3 = layers.layer3;
 
-wb = 18;
+wb = 36;
 
 %%
 % load texture, pad to be a square, get color for this texture
@@ -24,12 +25,12 @@ textures = textures(18:79,13:285);
 alphas = text_img(49:146,305:603);
 alphas = alphas(18:79,13:285);
 
-for s=1:size(layer1,1)
+for s=1:size(layer0,1)
     if mod(s,50) == 0
        disp("nom tubba"); 
     end
     
-    stroke = layer1(s);
+    stroke = layer0(s);
     
     if stroke.l1 + stroke.l2 == 0
         continue
@@ -68,7 +69,15 @@ for s=1:size(layer1,1)
             end
             
             if angle_alpha(i-row_start+1,j-col_start+1) > 0
-               canvas(i,j,:) = angle_texture(i-row_start+1,j-col_start+1,:);
+               texture_pixel = angle_texture(i-row_start+1,j-col_start+1,:);
+               texture_alpha = angle_alpha(i-row_start+1,j-col_start+1);
+               %{
+               A_prime = squeeze(canvas(i,j,:));
+               B_prime = squeeze(texture_alpha * texture_pixel);
+               canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
+               canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
+               %}
+               canvas(i,j,:) = canvas(i,j,:) * (1-texture_alpha) + texture_pixel * texture_alpha;
             end
         end
     end
