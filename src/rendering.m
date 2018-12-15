@@ -1,6 +1,5 @@
-%% 
+%%
 close all
-clear all
 
 %% read in image
 img = im2double(imread('../data/peach.png'));
@@ -11,7 +10,7 @@ numRows = imh * canvasScale;
 numCols = imw * canvasScale;
 
 canvas = ones(numRows,numCols,3);
-canvas_alphas = zeros(numRows,numCols);
+canvas_alphas = ones(numRows,numCols);
 
 layers = load('color_layers.mat');
 layer0 = layers.layer0;
@@ -31,18 +30,18 @@ alphas = alphas(18:79,13:285);
 
 [canvas0, canvas_alphas0] = renderLayer(layer0,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols);
 disp("done nom");
-[canvas1, canvas_alphas1] = renderLayer(layer1,wb/2,textures,alphas,canvas0,canvas_alphas0,numRows,numCols);
+[canvas1, canvas_alphas1] = renderLayer(layer1,wb/2,textures,alphas,canvas,canvas_alphas,numRows,numCols);
 disp("done nom");
-[canvas2, canvas_alphas2] = renderLayer(layer2,wb/3,textures,alphas,canvas1,canvas_alphas1,numRows,numCols);
+[canvas2, canvas_alphas2] = renderLayer(layer2,wb/3,textures,alphas,canvas,canvas_alphas,numRows,numCols);
 disp("done nom");
-[canvas3, canvas_alphas3] = renderLayer(layer3,wb/6,textures,alphas,canvas2,canvas_alphas2,numRows,numCols);
+[canvas3, canvas_alphas3] = renderLayer(layer3,wb/6,textures,alphas,canvas,canvas_alphas,numRows,numCols);
 disp("done nom");
 
 function [canvas,canvas_alphas] = ...
     renderLayer(layer,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols)
 for s=1:size(layer,1)
     if mod(s,50) == 0
-       disp("nom tubba"); 
+        disp("nom tubba");
     end
     
     stroke = layer(s);
@@ -83,16 +82,15 @@ for s=1:size(layer,1)
             end
             
             if angle_alpha(i-row_start+1,j-col_start+1) > 0
-               texture_pixel = angle_texture(i-row_start+1,j-col_start+1,:);
-               texture_alpha = angle_alpha(i-row_start+1,j-col_start+1);
-     
-                A_prime = squeeze(canvas(i,j,:));
+                texture_pixel = angle_texture(i-row_start+1,j-col_start+1,:);
+                texture_alpha = angle_alpha(i-row_start+1,j-col_start+1);
+                
+                A_prime = squeeze(canvas_alphas(i,j) * canvas(i,j,:));
                 B_prime = squeeze(texture_alpha * texture_pixel);
+                
                 canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
                 canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
-          
-               % compositing something
-               %canvas(i,j,:) = canvas(i,j,:) * (1-texture_alpha) + texture_pixel * texture_alpha;
+                
             end
         end
     end
@@ -131,12 +129,6 @@ else
         centered_im = padarray(centered_im,[0;right_pad],0,'post');
     end
 end
-
-% figure;
-% imshow(centered_im);
-% hold on;
-% plot(col+left_pad,row+top_pad,'b*');
-% pause;
 end
 
 function color_texture = get_color_texture(textures, color)

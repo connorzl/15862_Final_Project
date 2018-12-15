@@ -21,7 +21,7 @@ layer3 = layers.layer3;
 % scale image to canvas size and convert to grayscale
 img_large = imresize(img, canvasScale);
 img_grayscale = rgb2gray(img_large);
-thresh = 0.15;
+thresh = 0.1;
 
 %%
 % find strong strokes for base layer
@@ -36,11 +36,11 @@ imshow(canvas);
 hold on
 imshow(canvas);
 
-[canvas, layer2, Gx2, Gy2] = findStrongStrokes(layer2, numRows, numCols, wb/4,...
+[canvas, layer2, Gx2, Gy2] = findStrongStrokes(layer2, numRows, numCols, wb/3,...
     thresh, img_grayscale);
 imshow(canvas);
 
-[canvas, layer3, Gx3, Gy3] = findStrongStrokes(layer3, numRows, numCols, round(wb/8),...
+[canvas, layer3, Gx3, Gy3] = findStrongStrokes(layer3, numRows, numCols, wb/6,...
     thresh, img_grayscale);
 imshow(canvas);
 

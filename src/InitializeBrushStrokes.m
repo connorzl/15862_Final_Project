@@ -7,7 +7,7 @@ numRows = imh * canvasScale;
 numCols = imw * canvasScale;
 
 % regeneration width
-wr = 24;
+wr = 18;
 
 % brush width
 wb = 36;
@@ -52,7 +52,7 @@ visualizeLayer(layer2,numRows,numCols,layer2Mask);
 %% initialize layer 3
 layer3 = repmat(S, N, 1);
 img_3 = edge(img_grayscale,'Canny',[],sigma_3);
-layer3Mask = computeLayerMask(0.25*wr, find(img_3), numRows, numCols);
+layer3Mask = computeLayerMask(round(0.25*wr), find(img_3), numRows, numCols);
 
 layer3 = computeBrushStrokes(layer3Mask,layer3,numRows,numCols,wr);
 visualizeLayer(layer3,numRows,numCols,layer3Mask);
