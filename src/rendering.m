@@ -28,20 +28,20 @@ textures = textures(18:79,13:285);
 alphas = text_img(49:146,305:603);
 alphas = alphas(18:79,13:285);
 
-[canvas0, canvas_alphas0] = renderLayer(layer0,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols);
-disp("done nom");
+% [canvas0, canvas_alphas0] = renderLayer(layer0,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols);
+% disp("done canvas0");
 [canvas1, canvas_alphas1] = renderLayer(layer1,wb/2,textures,alphas,canvas,canvas_alphas,numRows,numCols);
-disp("done nom");
+disp("done canvas1");
 [canvas2, canvas_alphas2] = renderLayer(layer2,wb/3,textures,alphas,canvas,canvas_alphas,numRows,numCols);
-disp("done nom");
+disp("done canvas2");
 [canvas3, canvas_alphas3] = renderLayer(layer3,wb/6,textures,alphas,canvas,canvas_alphas,numRows,numCols);
-disp("done nom");
+disp("done canvas3");
 
 function [canvas,canvas_alphas] = ...
     renderLayer(layer,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols)
 for s=1:size(layer,1)
     if mod(s,50) == 0
-        disp("nom tubba");
+        disp(s);
     end
     
     stroke = layer(s);
@@ -90,7 +90,7 @@ for s=1:size(layer,1)
                 
                 canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
                 canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
-                
+%                 canvas(i,j,:) = texture_pixel;
             end
         end
     end

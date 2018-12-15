@@ -21,7 +21,7 @@ layer3 = layers.layer3;
 % scale image to canvas size and convert to grayscale
 img_large = imresize(img, canvasScale);
 img_grayscale = rgb2gray(img_large);
-thresh = 0.1;
+thresh = 0.15;
 
 %%
 % find strong strokes for base layer
@@ -76,7 +76,7 @@ hold on;
 
 n = 1;
 
-quiver(temp_x(1:n:end,1:n:end), temp_y(1:n:end,1:n:end),10, '.');
+quiver(temp_x(1:n:end,1:n:end), temp_y(1:n:end,1:n:end),100, '.');
 axis image;
 axis ij;
 
@@ -96,16 +96,17 @@ end
 %% find strong strokes based on gradient threshold
 function [canvas, layer, Gx, Gy] = findStrongStrokes(layer, numRows, numCols, width,...
     thresh, img_grayscale)
-%{
+
 kernelSize = [width width];
 kernel = fspecial('gaussian',kernelSize);
 img_blur = imfilter(img_grayscale,kernel,'replicate','same');
 [Gx,Gy] = imgradientxy(img_blur,'sobel');
-%}
+
+%{
 gradients = load('peach_gradients.mat');
 Gx = gradients.s_x;
 Gy = gradients.s_y;
-
+%}
 numStrong = 0;
 for i = 1:size(layer)
     S = layer(i);
