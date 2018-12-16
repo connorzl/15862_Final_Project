@@ -2,7 +2,8 @@ close all
 clear all
 
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img_name = '../data/peach.png';
+img = im2double(imread(img_name));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -21,27 +22,28 @@ layer3 = layers.layer3;
 % scale image to canvas size and convert to grayscale
 img_large = imresize(img, canvasScale);
 img_grayscale = rgb2gray(img_large);
-thresh = 0.15;
+thresh = 0.25;
+useGradientShop = false;
 
 %%
 % find strong strokes for base layer
 [canvas, baseLayer, Gx0, Gy0] = findStrongStrokes(baseLayer, numRows, numCols, wb,...
-    thresh, img_grayscale);
+    thresh, img_grayscale, useGradientShop);
 figure;
 imshow(canvas);
 
 % find strong strokes for other layers
 [canvas, layer1, Gx1, Gy1] = findStrongStrokes(layer1, numRows, numCols, wb/2,...
-    thresh, img_grayscale);
+    thresh, img_grayscale, useGradientShop);
 hold on
 imshow(canvas);
 
 [canvas, layer2, Gx2, Gy2] = findStrongStrokes(layer2, numRows, numCols, wb/3,...
-    thresh, img_grayscale);
+    thresh, img_grayscale, useGradientShop);
 imshow(canvas);
 
 [canvas, layer3, Gx3, Gy3] = findStrongStrokes(layer3, numRows, numCols, wb/6,...
-    thresh, img_grayscale);
+    thresh, img_grayscale, useGradientShop);
 imshow(canvas);
 
 %% compute radial basis function
@@ -95,18 +97,24 @@ end
 end
 %% find strong strokes based on gradient threshold
 function [canvas, layer, Gx, Gy] = findStrongStrokes(layer, numRows, numCols, width,...
-    thresh, img_grayscale)
+    thresh, img_grayscale, useGradientShop)
 
 kernelSize = [width width];
 kernel = fspecial('gaussian',kernelSize);
 img_blur = imfilter(img_grayscale,kernel,'replicate','same');
 [Gx,Gy] = imgradientxy(img_blur,'sobel');
 
-%{
-gradients = load('peach_gradients.mat');
-Gx = gradients.s_x;
-Gy = gradients.s_y;
-%}
+if useGradientShop
+    gradients = load('long_edge_gradients.mat');
+    Gx = gradients.s_x;
+    Gy = gradients.s_y;
+else
+    kernelSize = [width width];
+    kernel = fspecial('gaussian',kernelSize);
+    img_blur = imfilter(img_grayscale,kernel,'replicate','same');
+    [Gx,Gy] = imgradientxy(img_blur,'sobel');
+end
+
 numStrong = 0;
 for i = 1:size(layer)
     S = layer(i);
@@ -127,15 +135,15 @@ for i = 1:size(layer)
     end
 end
 
-disp(numStrong);
+disp(sprintf('numStrong: %d\n', numStrong));
 end
 
 % estimate gradients based on nearest strong gradients
 function [layer, temp_x, temp_y] = find_orientation(numRows,numCols,layer,P,P_g)
 temp_x = zeros(numRows, numCols);
 temp_y = zeros(numRows, numCols);
-% sigma = 50;
-nearest_num = 20; % TODO try diff numbers
+
+nearest_num = 20;
 for s=1:size(layer,1)
     curr_stroke = layer(s);
     
@@ -149,13 +157,13 @@ for s=1:size(layer,1)
     for i=1:size(P,1)
         P_r = P(i,1);
         P_c = P(i,2);
-            dist = sqrt((r-P_r)^2 + (c-P_c)^2);
-            inv_dists(i,:) = [1/dist, i];
+        dist = sqrt((r-P_r)^2 + (c-P_c)^2);
+        inv_dists(i,:) = [1/dist, i];
     end
     sorted_dists = sortrows(inv_dists,1,'descend');
     sorted_dists = sorted_dists(1:nearest_num,:);
     total_dists = sum(sorted_dists(:,1));
-
+    
     x_grad = 0;
     y_grad = 0;
     for i=1:size(sorted_dists,1)
@@ -171,5 +179,4 @@ for s=1:size(layer,1)
     end
     layer(s) = curr_stroke;
 end
-disp('done');
 end

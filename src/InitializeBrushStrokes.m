@@ -1,5 +1,6 @@
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img_name = '../data/peach.png';
+img = im2double(imread(img_name));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -56,23 +57,6 @@ layer3Mask = computeLayerMask(round(0.25*wr), find(img_3), numRows, numCols);
 
 layer3 = computeBrushStrokes(layer3Mask,layer3,numRows,numCols,wr);
 visualizeLayer(layer3,numRows,numCols,layer3Mask);
-
-%{
-figure;
-imshow(img_1);
-figure;
-imshow(img_2);
-figure;
-imshow(img_3);
-%}
-%{
-figure;
-imshow(layer1Mask);
-figure;
-imshow(layer2Mask);
-figure;
-imshow(layer3Mask);
-%}
 
 %% save to file
 save('layers.mat','baseLayer','layer1','layer2','layer3');

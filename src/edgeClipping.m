@@ -2,7 +2,8 @@ close all
 clear all
 
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img_name = '../data/peach.png';
+img = im2double(imread(img_name));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -28,17 +29,8 @@ mask3 = layer_masks.layer3Mask;
 %% blur layers
 sigma_0 = round(0.2*wb);
 img_0 = imgaussfilt(img_grayscale, sigma_0);
-%{
-figure;
-imshow(img_0);
-%}
-
 edge_img_0 = ~(edge(img_0,'Canny',0.4));
-%{
-figure;
-imshow(edge_img_0);
-%}
-wb = 36;
+
 [layer0,layerMask0] = add_strokes_to_layer(numRows,numCols,layer0,edge_img_0,wb,true);
 [layer1,layerMask1] = add_strokes_to_layer(numRows,numCols,layer1,mask1,wb/2,false);
 [layer2,layerMask2] = add_strokes_to_layer(numRows,numCols,layer2,mask2,wb/3,false);
@@ -87,18 +79,10 @@ while no_edge_hit
             
     circle = [];
     for new_y=round(y-wb/2):round(y+wb/2)
-%         if ~no_edge_hit
-%             break
-%         end
         for new_x=round(x-wb/2):round(x+wb/2)
             if new_y < 1 || new_y > numRows || new_x < 1 || new_x > numCols
                 continue
             end
-%             if ~is_base_layer && ~layer_mask(round(new_y), round(new_x))
-%                 no_edge_hit = false;
-%                 break
-%             end
-           
             if sqrt((new_x-x)^2 + (new_y-y)^2) <= wb/2
                 circle = [circle; new_y new_x];
             end

@@ -2,8 +2,11 @@
 close all
 
 %% read in image
-img = im2double(imread('../data/peach.png'));
+img_name = '../data/peach.png';
+img = im2double(imread(img_name));
 [imh, imw, ~] = size(img);
+
+wb = 36;
 
 canvasScale = 2;
 numRows = imh * canvasScale;
@@ -18,27 +21,27 @@ layer1 = layers.layer1;
 layer2 = layers.layer2;
 layer3 = layers.layer3;
 
-wb = 36;
-
 %%
 % load texture, pad to be a square, get color for this texture
-text_img = im2double(rgb2gray(imread('./data/imp_brushstrokes.jpg')));
+text_img = im2double(rgb2gray(imread('../data/imp_brushstrokes.jpg')));
 textures = text_img(49:146,4:302);
 textures = textures(18:79,13:285);
 alphas = text_img(49:146,305:603);
 alphas = alphas(18:79,13:285);
 
-% [canvas0, canvas_alphas0] = renderLayer(layer0,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols);
-% disp("done canvas0");
-[canvas1, canvas_alphas1] = renderLayer(layer1,wb/2,textures,alphas,canvas,canvas_alphas,numRows,numCols);
+useAlpha = true;
+
+[canvas0, canvas_alphas0] = renderLayer(layer0,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols,useAlpha);
+disp("done canvas0");
+[canvas1, canvas_alphas1] = renderLayer(layer1,wb/2,textures,alphas,canvas0,canvas_alphas0,numRows,numCols,useAlpha);
 disp("done canvas1");
-[canvas2, canvas_alphas2] = renderLayer(layer2,wb/3,textures,alphas,canvas,canvas_alphas,numRows,numCols);
+[canvas2, canvas_alphas2] = renderLayer(layer2,wb/3,textures,alphas,canvas1,canvas_alphas1,numRows,numCols,useAlpha);
 disp("done canvas2");
-[canvas3, canvas_alphas3] = renderLayer(layer3,wb/6,textures,alphas,canvas,canvas_alphas,numRows,numCols);
+[canvas3, canvas_alphas3] = renderLayer(layer3,wb/6,textures,alphas,canvas2,canvas_alphas2,numRows,numCols,useAlpha);
 disp("done canvas3");
 
 function [canvas,canvas_alphas] = ...
-    renderLayer(layer,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols)
+    renderLayer(layer,wb,textures,alphas,canvas,canvas_alphas,numRows,numCols,useAlpha)
 for s=1:size(layer,1)
     if mod(s,50) == 0
         disp(s);
@@ -83,14 +86,17 @@ for s=1:size(layer,1)
             
             if angle_alpha(i-row_start+1,j-col_start+1) > 0
                 texture_pixel = angle_texture(i-row_start+1,j-col_start+1,:);
-                texture_alpha = angle_alpha(i-row_start+1,j-col_start+1);
                 
-                A_prime = squeeze(canvas_alphas(i,j) * canvas(i,j,:));
-                B_prime = squeeze(texture_alpha * texture_pixel);
-                
-                canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
-                canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
-%                 canvas(i,j,:) = texture_pixel;
+                if useAlpha
+                    texture_alpha = angle_alpha(i-row_start+1,j-col_start+1);
+                    A_prime = squeeze(canvas_alphas(i,j) * canvas(i,j,:));
+                    B_prime = squeeze(texture_alpha * texture_pixel);
+                    
+                    canvas(i,j,:) = B_prime + (1 - texture_alpha) * A_prime;
+                    canvas_alphas(i,j) = texture_alpha + (1-texture_alpha) * canvas_alphas(i,j);
+                else
+                    canvas(i,j,:) = texture_pixel;
+                end
             end
         end
     end

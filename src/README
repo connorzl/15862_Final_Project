@@ -1,0 +1,30 @@
+Non-photorealistic Rendering Pipeline
+
+
+1. initializeBrushStrokes.m
+Provide an img_name, wr, wb. wr must be < wb.
+Run initializeBrushStrokes
+
+2. orientation.m
+Change img_name, wb to be same as in step 1.
+Set useGradientShop to true/false for using long-edge detector (GradientShop) or local edges (original).
+If using gradientshop, proceed to step 2a.
+Modify thresh until numStrong for each layer is around between 100 and 200.
+Run orientation
+
+2a. longEdgeDetector.m
+Change img_name to be same as in step 1.
+Run longEdgeDetector
+
+3. edgeClipping.m
+Change img_name, wb to be same as in step 1.
+Run edgeClipping
+
+4. colorExtraction.m
+Change img_name to be same as in step 1.
+Run colorExtraction
+
+5. rendering.m
+Change img_name, wb to be same as in step 1.
+Change useAlpha to true if one wants to use alpha compositing, false otherwise.
+Run rendering

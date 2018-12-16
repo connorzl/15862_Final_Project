@@ -2,7 +2,9 @@ close all
 clear all
 
 %%
-img = im2double(imread('../data/peach.png'));
+img_name = '../data/peach.png';
+
+img = im2double(imread(img_name));
 [imh, imw, ~] = size(img);
 
 canvasScale = 2;
@@ -137,6 +139,8 @@ n = 2;
 quiver(u_x(1:n:end,1:n:end), u_y(1:n:end,1:n:end),100, '.');
 axis image;
 axis ij;
+
+save('long_edge_gradients.mat', 's_x', 's_y');
 
 %% bilinear interpolation function
 function [q_x, q_y, weights] = bilinearInterpolation(x,y)
